@@ -1,24 +1,32 @@
+if (process.env.NODE_ENV !== "production"){
+    require('dotenv').config();
+}
+
 const bcrypt = require('bcrypt');
 const express = require('express');
 const mongoose = require('mongoose');
 const session = require('express-session');
-const User = require('./models/user.js');
 
 const app = express();
+const port = process.env.PORT || 3000;
+const User = require('./models/user.js');
+const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/authDemo';
 
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 app.use(express.urlencoded({extended: true}));
 app.use(session({secret: 'notagoodsecret'}));
 
-mongoose.connect('mongodb://localhost:27017/authDemo', {useNewUrlParser: true, useUnifiedTopology: true})
-    .then(() => {
-        console.log('MONGO CONNECTION OPEN!');
-    })
-    .catch(err => {
-        console.log('MONGO CONNECTION ERROR!');
-        console.log(err);
-    })
+mongoose.connect(dbUrl, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+});
+
+const db = mongoose.connection;
+db.on("error", console.error.bind(console, "MONGO CONNECTION ERROR"));
+db.once("open", () => {
+    console.log("DATABASE CONNECTED");
+})
 
 // Bcrypt Demo
 /*
@@ -93,6 +101,8 @@ app.get('/secret', requireLogin, (req, res) => {
     res.render('secret.ejs');
 })
 
-app.listen(3000, () => {
-    console.log('Serving your app!');
+
+
+app.listen(port, () => {
+    console.log(`SERVING ON PORT ${port}!`);
 })
