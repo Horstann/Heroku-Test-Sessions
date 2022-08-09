@@ -14,7 +14,7 @@ const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/authDemo';
 
 app.set('view engine', 'ejs');
 app.set('views', 'views');
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({extended: true})); // so that req.body isn't undefined
 app.use(session({secret: 'notagoodsecret'}));
 
 mongoose.connect(dbUrl, {
@@ -56,8 +56,15 @@ const requireLogin = (req, res, next) => {
     next();
 }
 
-app.get('/', (req, res) => {
-    res.send('THIS IS THE HOME PAGE');
+app.get('/', async(req, res) => {
+    const id = req.session.user_id;
+    if (id){
+        const user = await User.findById(id);
+        const username = user.username;
+        res.render('home.ejs', {username});
+    }else{
+        res.render('home.ejs', {username: null});
+    }
 })
 
 app.get('/register', (req, res) => {
@@ -66,15 +73,22 @@ app.get('/register', (req, res) => {
 
 app.post('/register', async(req, res) => {
     const {password, username} = req.body;
-    const hash = await bcrypt.hash(password, 12);
 
-    const user = new User({
-        username,
-        password: hash
-    })
+    const foundUser = await User.find({username: username});
 
-    await user.save();
-    res.redirect('/');
+    if (foundUser){
+        res.send(`There's already a registered account with username "${username}". Please use another username.`);
+    }else{
+        const hash = await bcrypt.hash(password, 12);
+        const user = new User({
+            username,
+            password: hash
+        })
+        await user.save();
+
+        req.session.user_id = user._id;
+        res.redirect('/secret');
+    }
 })
 
 app.get('/login', (req, res) => {
@@ -95,12 +109,16 @@ app.post('/login', async(req, res) => {
 app.post('/logout', (req, res) => {
     req.session.user_id = null;
     //req.session.destroy();
-    res.redirect('/login');
+    res.redirect('/');
 })
 
 // secret routes
-app.get('/secret', requireLogin, (req, res) => {
-    res.render('secret.ejs');
+app.get('/secret', requireLogin, async(req, res) => {
+    const id = req.session.user_id;
+    const user = await User.findById(id);
+    const username = user.username;
+
+    res.render('secret.ejs', {username});
 })
 
 
