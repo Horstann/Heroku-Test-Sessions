@@ -76,9 +76,7 @@ app.post('/register', async(req, res) => {
 
     const foundUser = await User.find({username: username});
 
-    if (foundUser){
-        res.send(`There's already a registered account with username "${username}". Please use another username.`);
-    }else{
+    if (foundUser===null){
         const hash = await bcrypt.hash(password, 12);
         const user = new User({
             username,
@@ -88,6 +86,8 @@ app.post('/register', async(req, res) => {
 
         req.session.user_id = user._id;
         res.redirect('/secret');
+    }else{
+        res.send(`There's already a registered account with username "${username}". Please use another username.`);
     }
 })
 
