@@ -74,9 +74,12 @@ app.get('/register', (req, res) => {
 app.post('/register', async(req, res) => {
     const {password, username} = req.body;
 
-    const foundUser = await User.find({username: username});
+    var foundUser = null;
+    foundUser = await User.find({username: username});
 
-    if (foundUser===null){
+    if (foundUser.length > 0){
+        res.send(`There's already a registered account with username "${username}". Please use another username.`);
+    }else if (username && password){
         const hash = await bcrypt.hash(password, 12);
         const user = new User({
             username,
@@ -87,7 +90,7 @@ app.post('/register', async(req, res) => {
         req.session.user_id = user._id;
         res.redirect('/secret');
     }else{
-        res.send(`There's already a registered account with username "${username}". Please use another username.`);
+        res.send("Password and username cannot be empty!")
     }
 })
 
@@ -97,6 +100,7 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async(req, res) => {
     const {username, password} = req.body;
+
     const foundUser = await User.findAndValidate(username, password);
     if (foundUser){
         req.session.user_id = foundUser._id;
