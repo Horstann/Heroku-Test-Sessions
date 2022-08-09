@@ -106,7 +106,7 @@ app.post('/login', async(req, res) => {
         req.session.user_id = foundUser._id;
         res.redirect('/secret');
     }else{
-        res.redirect('/login');
+        res.send('Invalid username or password. Try again.');
     }
 })
 
