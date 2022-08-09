@@ -57,8 +57,7 @@ const requireLogin = (req, res, next) => {
 }
 
 app.get('/', (req, res) => {
-    //res.send('THIS IS THE HOME PAGE');
-    res.send(dbUrl);
+    res.send('THIS IS THE HOME PAGE');
 })
 
 app.get('/register', (req, res) => {
