@@ -57,7 +57,8 @@ const requireLogin = (req, res, next) => {
 }
 
 app.get('/', (req, res) => {
-    res.send('THIS IS THE HOME PAGE');
+    //res.send('THIS IS THE HOME PAGE');
+    res.send(dbUrl);
 })
 
 app.get('/register', (req, res) => {
@@ -73,12 +74,8 @@ app.post('/register', async(req, res) => {
         password: hash
     })
 
-    res.send(hash);
-
-    /*
     await user.save();
     res.redirect('/');
-    */
 })
 
 app.get('/login', (req, res) => {
